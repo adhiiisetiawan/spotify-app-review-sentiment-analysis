@@ -31,9 +31,9 @@ df.head()
 
 def get_sentiment(rating):
     if rating == 1 or rating == 2 or rating == 3:
-        return "negative"
+        return 0
     if rating == 4 or rating == 5:
-        return "positive"
+        return 1
 
 
 df["Sentiment"] = df["Rating"].apply(get_sentiment)
@@ -42,12 +42,6 @@ df.head()
 
 df = df.drop(columns=['Time_submitted', 'Rating', 'Total_thumbsup', 'Reply'])
 df.head()
-
-sentiment = pd.get_dummies(df.Sentiment)
-df = pd.concat([df, sentiment], axis=1)
-df.head()
-
-df = df.drop(columns='Sentiment')
 
 import nltk
 from nltk.corpus import stopwords
@@ -61,7 +55,7 @@ df["Review"] = df["Review"].apply(lambda words: ' '.join(word.lower() for word i
 df.head()
 
 review = df['Review'].values
-label = df[['negative', 'positive']].values
+label = df['Sentiment'].values
 
 X_train, X_test, y_train, y_test = train_test_split(review, label, test_size=0.2)
 X_train.size, y_train.size
@@ -78,8 +72,14 @@ with open('word_index.json', 'w') as fp:
 X_train_sequence = tokenizer.texts_to_sequences(X_train)
 X_test_sequence = tokenizer.texts_to_sequences(X_test)
 
-X_train_padded = pad_sequences(X_train_sequence)
-X_test_paded = pad_sequences(X_test_sequence)
+X_train_padded = pad_sequences(X_train_sequence,
+                               maxlen=20,
+                               padding='post',
+                               truncating='post')
+X_test_paded = pad_sequences(X_test_sequence,
+                             maxlen=20,
+                             padding='post',
+                             truncating='post')
 
 model = tf.keras.Sequential([
     tf.keras.layers.Embedding(input_dim=5000, output_dim=16),
@@ -89,7 +89,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dropout(0.25),
-    tf.keras.layers.Dense(2, activation='sigmoid')
+    tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
 model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(
@@ -109,6 +109,21 @@ history = model.fit(X_train_padded,
                     validation_data=(X_test_paded, y_test),
                     verbose=2,
                     callbacks=[tensorboard_callback, es_callback])
+
+import numpy as np
+
+def get_predictions(text):
+    sequence = tokenizer.texts_to_sequences([text])
+    # pad the sequences
+    sequence = pad_sequences(sequence, maxlen=20)
+    # get the prediction
+    prediction = model.predict(sequence)[0]
+    return prediction, "Positive" if prediction > 0.5 else "Negative"
+
+test_text = "Great music service,"
+confidence, label = get_predictions(test_text)
+print(confidence)
+print(label)
 
 def plot_graphs(history, string):
   plt.plot(history.history[string])
