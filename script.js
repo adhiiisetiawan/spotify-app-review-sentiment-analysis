@@ -116,6 +116,7 @@ function onClick(){
  
     // Score prediksi dengan nilai 0 s/d 1
     let score = predict(inputText);
+    console.log("score "+score)
  
     // Kondisi penentuan hasil prediksi berdasarkan nilai score
     if (score > 0.5) {
