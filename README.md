@@ -8,6 +8,7 @@
 # clone repository
 git clone https://github.com/adhiiisetiawan/spotify-app-review-sentiment-analysis.git  
 cd spotify-app-review-sentiment-analysis
+```
 
 2. In this part, i will try to run locally. So download the extension for chrome, [Web Server for Chrome](https://chrome.google.com/webstore/detail/web-server-for-chrome/ofhbbkphhbklhfoeikjpcbhemlocgigb?hl=en)
 
